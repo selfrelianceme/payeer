@@ -1,1 +1,1 @@
-# payeer
+# Payeer payment system
