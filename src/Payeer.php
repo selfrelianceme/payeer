@@ -26,13 +26,17 @@ class Payeer implements PayeerInterface
 		return $this;
 	}
 
-	protected $cpayeer;
-
 	public function __construct(){
+		
+	}
+
+	protected $cpayeer;
+	public function connect(){
 		$this->cpayeer = new CPayeer(Config::get('payeer.payeer_wallet'), Config::get('payeer.api_id'), Config::get('payeer.api_key'));
 	}
 
 	function balance($unit = "USD"){
+		$this->connect();
 		if ($this->cpayeer->isAuth()){
 			$arTransfer = $this->cpayeer->getBalance();
 			return $arTransfer['balance'][$unit]['DOSTUPNO'];
@@ -146,6 +150,7 @@ class Payeer implements PayeerInterface
 	}
 
 	function send_money($payment_id, $amount, $address, $currency){
+		$this->connect();
 		if ($this->cpayeer->isAuth()){
 			$arTransfer = $this->cpayeer->transfer(array(
 				'curIn'		=>	$currency,

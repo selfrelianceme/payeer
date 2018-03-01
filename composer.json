@@ -1,7 +1,7 @@
 {
   "name": "selfreliance/payeer",
   "type": "library",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Payeer payment system for laravel",
   "keywords": ["laravel"],
   "homepage": "https://github.com/selfrelianceme/payeer",
