@@ -13,7 +13,7 @@ use Selfreliance\Payeer\Events\PayeerPaymentIncome;
 use Selfreliance\Payeer\Events\PayeerPaymentCancel;
 
 use Selfreliance\Payeer\PayeerInterface;
-use Log;
+use App\Models\MerchantPosts;
 use Selfreliance\Payeer\Service\CPayeer;
 
 class Payeer implements PayeerInterface
@@ -78,12 +78,10 @@ class Payeer implements PayeerInterface
     }
 
     function check_transaction(array $request, array $server, $headers = []){
-		Log::info('Payeer IPN', [
-			'request' => $request,
-			'headers' => $headers,
-			'server'  => array_intersect_key($server, [
-				'PHP_AUTH_USER', 'PHP_AUTH_PW'
-			])
+		MerchantPosts::create([
+			'type'      => 'Payeer',
+			'ip'        => real_ip(),
+			'post_data' => $request
 		]);
 		if(!array_key_exists('m_orderid', $request)){
 			$request['m_orderid'] = 0;
@@ -102,11 +100,13 @@ class Payeer implements PayeerInterface
 				return \Response::make($request['m_orderid']."|success", "200");
 			}
 		}catch(PayeerException $e){
-			Log::error('Payeer IPN', [
-				'message' => $e->getMessage()
+			MerchantPosts::create([
+				'type'      => 'Payeer_Error',
+				'ip'        => real_ip(),
+				'post_data' => ['request' => $request, 'message' => $e->getMessage()],
 			]);
 
-			return \Response::make($request['m_orderid']."|error", "422");
+			return \Response::make($request['m_orderid']."|error", "200");
 		}
 
 		return \Response::make($request['m_orderid']."|error", "200");

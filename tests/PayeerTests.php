@@ -43,9 +43,9 @@ class PayeerHandlerPayments extends TestCase
         $payeer = new Payeer();
         $generate_hash = 
         $data = [
-            'm_amount'             => 1,
-            'm_orderid'            => 0,
-            'm_operation_id'       => 0,
+            'm_amount'             => 50,
+            'm_orderid'            => 374690,
+            'm_operation_id'       => mt_rand(0,55555),
             'm_sign'               => 1,
             'm_operation_ps'       => 1,
             'm_operation_date'     => 1,
