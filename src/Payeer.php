@@ -94,7 +94,7 @@ class Payeer implements PayeerInterface
 				$PassData->payment_id         = $request['m_orderid'];
 				$PassData->transaction        = $request['m_operation_id'];
 				$PassData->add_info           = [
-					"full_data_ipn" => json_encode($request)
+					"full_data_ipn" => $request
 				];
 				event(new PayeerPaymentIncome($PassData));
 				return \Response::make($request['m_orderid']."|success", "200");
