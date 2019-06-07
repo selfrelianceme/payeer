@@ -3,8 +3,6 @@
 namespace Selfreliance\Payeer;
 
 use Illuminate\Http\Request;
-use Config;
-use Route;
 
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Selfreliance\Payeer\Exceptions\PayeerException;
@@ -30,12 +28,20 @@ class Payeer implements PayeerInterface
 		
 	}
 
+    /**
+     * @var \Selfreliance\Payeer\Service\CPayeer
+     */
 	protected $cpayeer;
 	public function connect(){
-		$this->cpayeer = new CPayeer(Config::get('payeer.payeer_wallet'), Config::get('payeer.api_id'), Config::get('payeer.api_key'));
+		$this->cpayeer = new CPayeer(config('payeer.payeer_wallet'), config('payeer.api_id'), config('payeer.api_key'));
 	}
 
-	function balance($unit = "USD"){
+    /**
+     * @param string $unit
+     * @return float
+     * @throws \Exception
+     */
+    function balance($unit = "USD"){
 		$this->connect();
 		if ($this->cpayeer->isAuth()){
 			$arTransfer = $this->cpayeer->getBalance();
@@ -45,16 +51,22 @@ class Payeer implements PayeerInterface
 		}
 	}
 
-	function form($payment_id, $sum, $units='USD'){
+    /**
+     * @param int $payment_id
+     * @param float $sum
+     * @param string $units
+     * @return test|string
+     */
+    function form($payment_id, $sum, $units='USD'){
 		$sum = number_format($sum, 2, ".", "");
 			
 		$m_desc = base64_encode($this->memo);
 		
-		$arHash = array(Config::get('payeer.shop_id'), $payment_id, $sum, $units, $m_desc, Config::get('payeer.shop_secret_key'));
+		$arHash = array(config('payeer.shop_id'), $payment_id, $sum, $units, $m_desc, config('payeer.shop_secret_key'));
 		$sign = strtoupper(hash('sha256', implode(":", $arHash)));
 
 		$form_data = array(
-			"m_shop"	=>	Config::get('payeer.shop_id'),
+			"m_shop"	=>	config('payeer.shop_id'),
 			"m_orderid"	=>	$payment_id,
 			"m_amount"	=>	$sum,
 			"m_curr"	=>	$units,
@@ -73,10 +85,20 @@ class Payeer implements PayeerInterface
 			return $content;
 	}
 
-	function validateIPNRequest(Request $request) {
+    /**
+     * @param Request $request
+     * @return bool
+     */
+    function validateIPNRequest(Request $request) {
         return $this->check_transaction($request->all(), $request->server(), $request->headers);
     }
 
+    /**
+     * @param array $request
+     * @param array $server
+     * @param array $headers
+     * @return bool
+     */
     function check_transaction(array $request, array $server, $headers = []){
 		MerchantPosts::create([
 			'type'      => 'Payeer',
@@ -112,6 +134,12 @@ class Payeer implements PayeerInterface
 		return \Response::make($request['m_orderid']."|error", "200");
 	}
 
+    /**
+     * @param array $post_data
+     * @param array $server_data
+     * @return bool
+     * @throws PayeerException
+     */
     function validateIPN(array $post_data, array $server_data){
 		if(!array_key_exists('m_operation_id', $post_data)){
 			throw new PayeerException("Need m operation id");
@@ -135,7 +163,7 @@ class Payeer implements PayeerInterface
 			$post_data['m_curr'],
 			$post_data['m_desc'],
 			$post_data['m_status'],
-			Config::get('payeer.shop_secret_key'));
+			config('payeer.shop_secret_key'));
 		$sign_hash = strtoupper(hash('sha256', implode(":", $arHash)));
 		
 		if($post_data["m_sign"] != $sign_hash){
@@ -149,7 +177,15 @@ class Payeer implements PayeerInterface
 		return true;
 	}
 
-	function send_money($payment_id, $amount, $address, $currency){
+    /**
+     * @param int $payment_id
+     * @param float $amount
+     * @param $address
+     * @param string $currency
+     * @return bool|\stdClass
+     * @throws \Exception
+     */
+    function send_money($payment_id, $amount, $address, $currency){
 		$this->connect();
 		if ($this->cpayeer->isAuth()){
 			$arTransfer = $this->cpayeer->transfer(array(
@@ -157,7 +193,7 @@ class Payeer implements PayeerInterface
 				'sum'		=>	$amount,
 				'curOut'	=>	$currency,
 				'to'		=>	strtoupper(trim($address)),
-				'comment'	=>	Config('app.name').", ID:".$payment_id
+				'comment'	=>	config('app.name').", ID:".$payment_id
 			));
 			
 			if(!empty($arTransfer["historyId"])){
@@ -176,12 +212,16 @@ class Payeer implements PayeerInterface
 		}
 	}
 
-	function cancel_payment(Request $request){
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     */
+    function cancel_payment(Request $request){
 		$PassData     = new \stdClass();
 		$PassData->id = $request->input('m_orderid');
 		
 		event(new PayeerPaymentCancel($PassData));
 
-		return redirect(env('PERSONAL_LINK_CAB'));
+        return redirect(config('perfectmoney.to_account'));
 	}
 }

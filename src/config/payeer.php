@@ -49,4 +49,14 @@ return [
     |
     */  
     'api_key'         => env('PY_KEY', 'api_key'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Afte pay to page redirect
+    |--------------------------------------------------------------------------
+    |
+    | Afte pay to page redirect
+    |
+    */
+    "to_account" => env('PERSONAL_LINK_CAB', '/personal')
 ];

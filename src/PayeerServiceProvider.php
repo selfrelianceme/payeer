@@ -28,6 +28,14 @@ class PayeerServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        $this->mergeConfigFrom(
+            __DIR__.'/config/payeer.php', 'payeer'
+        );
+
+        $this->app->bind(Payeer::class, function () {
+            return new Payeer();
+        });
+
+        $this->app->alias(Payeer::class, 'payment.payeer');
     }
 }
