@@ -2,6 +2,7 @@
 
 namespace Selfreliance\Payeer;
 use Illuminate\Support\ServiceProvider;
+use Selfreliance\Payeer\Commands\ShowUrl;
 
 class PayeerServiceProvider extends ServiceProvider
 {
@@ -37,5 +38,9 @@ class PayeerServiceProvider extends ServiceProvider
         });
 
         $this->app->alias(Payeer::class, 'payment.payeer');
+
+        $this->commands([
+            ShowUrl::class,
+        ]);
     }
 }

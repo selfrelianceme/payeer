@@ -34,3 +34,8 @@ PY_API_ID=
 PY_KEY=
 PERSONAL_LINK_CAB=/personal
 ```
+
+**Urls for shop setup**
+```
+php artisan payeer:url
+```
